@@ -7,7 +7,8 @@ from flask import (
     url_for,
     current_app,
     flash,
-    abort
+    abort,
+    request
 )
 
 from itsdangerous import SignatureExpired
@@ -74,6 +75,10 @@ def activate_user(user_id):
     user = user_api_client.get_user(user_id)
     # the user will have a new current_session_id set by the API - store it in the cookie for future requests
     session['current_session_id'] = user.current_session_id
+    organisation_id = session['organisation_id']
     activated_user = user_api_client.activate_user(user)
     login_user(activated_user)
-    return redirect(url_for('main.add_service', first='first'))
+    if organisation_id:
+        return redirect(url_for('main.organisation_dashboard', org_id=organisation_id))
+    else:
+        return redirect(url_for('main.add_service', first='first'))

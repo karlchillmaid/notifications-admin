@@ -17,13 +17,15 @@ from app.main import main
 
 from app.main.forms import (
     RegisterUserForm,
-    RegisterUserFromInviteForm
+    RegisterUserFromInviteForm,
+    RegisterUserFromOrgInviteForm
 )
 from app.main.views.verify import activate_user
 
 from app import (
     user_api_client,
-    invite_api_client
+    invite_api_client,
+    org_invite_api_client
 )
 
 
@@ -65,7 +67,27 @@ def register_from_invite():
     return render_template('views/register-from-invite.html', invited_user=invited_user, form=form)
 
 
-def _do_registration(form, send_sms=True, send_email=True):
+@main.route('/register-from-org-invite', methods=['GET', 'POST'])
+def register_from_org_invite():
+    invited_org_user = session.get('invited_org_user')
+    if not invited_org_user:
+        abort(404)
+
+    form = RegisterUserFromOrgInviteForm(
+        invited_org_user,
+        )
+    form.auth_type.data = 'sms_auth'
+
+    if form.validate_on_submit():
+        if form.organisation.data != invited_org_user['organisation'] or form.email_address.data != invited_org_user['email_address']:
+            abort(400)
+        _do_registration(form, send_email=False, send_sms=True, organisation_id=invited_org_user['organisation'])
+        org_invite_api_client.accept_invite(invited_org_user['organisation'], invited_org_user['id'])
+        return redirect(url_for('main.verify'))
+    return render_template('views/register-from-org-invite.html', invited_org_user=invited_org_user, form=form)
+
+
+def _do_registration(form, send_sms=True, send_email=True, organisation_id=None):
     if user_api_client.is_email_unique(form.email_address.data):
         user = user_api_client.register_user(form.name.data,
                                              form.email_address.data,
@@ -92,6 +114,8 @@ def _do_registration(form, send_sms=True, send_email=True):
             user_api_client.send_already_registered_email(user.id, user.email_address)
         session['expiry_date'] = str(datetime.utcnow() + timedelta(hours=1))
         session['user_details'] = {"email": user.email_address, "id": user.id}
+    if organisation_id:
+        session['organisation_id'] = organisation_id
 
 
 @main.route('/registration-continue')

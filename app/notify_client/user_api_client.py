@@ -131,10 +131,19 @@ class UserApiClient(NotifyAdminAPIClient):
         resp = self.get(endpoint)
         return [User(data) for data in resp['data']]
 
+    def get_users_for_organisation(self, org_id):
+        endpoint = '/organisations/{}/users'.format(org_id)
+        resp = self.get(endpoint)
+        return [User(data) for data in resp['data']]
+
     def add_user_to_service(self, service_id, user_id, permissions):
         endpoint = '/service/{}/users/{}'.format(service_id, user_id)
         data = [{'permission': x} for x in permissions]
         resp = self.post(endpoint, data=data)
+        return User(resp['data'], max_failed_login_count=self.max_failed_login_count)
+
+    def add_user_to_organisation(self, org_id, user_id):
+        resp = self.post('/organisation/{}/users/{}'.format(org_id, user_id))
         return User(resp['data'], max_failed_login_count=self.max_failed_login_count)
 
     def set_user_permissions(self, user_id, service_id, permissions):

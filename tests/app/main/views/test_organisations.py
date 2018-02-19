@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup
 from flask import url_for
 
+from app.notify_client.models import InvitedOrgUser
 from tests.conftest import (
     normalize_spaces
 )
@@ -151,3 +152,78 @@ def test_organisation_services_show(
         assert normalize_spaces(
             page.select('.browse-list-item a')[i]['href']
         ) == '/services/{}'.format(service_id)
+
+
+def test_view_team_members(
+    logged_in_platform_admin_client,
+    mocker,
+    mock_get_organisation,
+    mock_get_users_for_organisation,
+    mock_get_invited_users_for_organisation
+):
+    response = logged_in_platform_admin_client.get(
+        url_for('.manage_org_users', org_id=mock_get_organisation['id']),
+    )
+
+    assert response.status_code == 200
+    page = BeautifulSoup(response.data.decode('utf-8'), 'html.parser')
+
+    for i in range(0,2):
+        assert normalize_spaces(
+            page.select('.user-list-item .heading-small')[i].text
+        ) == 'Test User {}'.format(i + 1)
+
+    assert normalize_spaces(
+            page.select_one('.tick-cross-list-edit-link').text
+        ) == 'Cancel invitation'
+
+
+def test_invite_org_user(
+    logged_in_platform_admin_client,
+    mocker,
+    mock_get_organisation,
+    fake_uuid
+):
+    new_org_user_data = {
+        'email_address': 'test@gov.uk',
+        'invited_by': fake_uuid,
+    }
+
+    mock_invite_org_user = mocker.patch(
+        'app.org_invite_api_client.invite_user',
+        return_value=InvitedOrgUser(**new_org_user_data)
+    )
+
+    response = logged_in_platform_admin_client.post(
+        url_for('.invite_org_user', org_id=mock_get_organisation['id']),
+        data=new_org_user_data
+    )
+
+    mock_invite_org_user.assert_called_once_with(
+        new_org_user_data['invited_by'],
+        mock_get_organisation['id'],
+        new_org_user_data['email_address'],
+    )
+
+
+
+
+def test_invite_org_user_errors_when_same_email_as_inviter(
+    logged_in_platform_admin_client,
+    mocker,
+    mock_get_organisation,
+    fake_uuid
+):
+    new_org_user_data = {
+        'email_address': 'platform@admin.gov.uk',
+        'invited_by': fake_uuid,
+    }
+
+    data = [InvitedOrgUser(**new_org_user_data)]
+
+    response = logged_in_platform_admin_client.post(
+        url_for('.invite_org_user', org_id=mock_get_organisation['id']),
+        data=new_org_user_data
+    )
+
+    assert response.status_code == 200
