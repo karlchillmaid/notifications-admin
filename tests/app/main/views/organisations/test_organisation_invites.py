@@ -4,7 +4,7 @@ from unittest.mock import ANY
 import pytest
 from bs4 import BeautifulSoup
 from flask import url_for
-from tests.conftest import normalize_spaces, ORGANISATION_ID
+from tests.conftest import ORGANISATION_ID, normalize_spaces
 
 from app.notify_client.models import InvitedOrgUser
 
