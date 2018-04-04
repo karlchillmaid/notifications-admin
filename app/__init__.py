@@ -56,6 +56,7 @@ from app.notify_client.org_invite_api_client import OrgInviteApiClient
 from app.notify_client.letter_jobs_client import LetterJobsClient
 from app.notify_client.inbound_number_client import InboundNumberClient
 from app.notify_client.billing_api_client import BillingAPIClient
+from notifications_utils.clients.redis.redis_client import RedisClient
 from app.commands import setup_commands
 from app.utils import get_cdn_domain
 from app.utils import gmt_timezones
@@ -121,6 +122,9 @@ def create_app(application):
     inbound_number_client.init_app(application)
     billing_api_client.init_app(application)
 
+    # this is bound to app.extensions['redis']
+    redis_store = RedisClient()
+    redis_store.init_app(application)
     login_manager.init_app(application)
     login_manager.login_view = 'main.sign_in'
     login_manager.login_message_category = 'default'

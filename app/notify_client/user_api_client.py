@@ -1,3 +1,5 @@
+from flask import current_app
+
 from notifications_python_client.errors import HTTPError
 
 from app.notify_client import NotifyAdminAPIClient
@@ -16,12 +18,12 @@ ALLOWED_ATTRIBUTES = {
 
 
 class UserApiClient(NotifyAdminAPIClient):
+
     def __init__(self):
         super().__init__("a" * 73, "b")
 
     def init_app(self, app):
         super().init_app(app)
-
         self.max_failed_login_count = app.config["MAX_FAILED_LOGIN_COUNT"]
         self.admin_url = app.config['ADMIN_BASE_URL']
 
@@ -37,6 +39,7 @@ class UserApiClient(NotifyAdminAPIClient):
         return User(user_data['data'], max_failed_login_count=self.max_failed_login_count)
 
     def get_user(self, id):
+        print(current_app.extensions['redis'])
         url = "/user/{}".format(id)
         user_data = self.get(url)
         return User(user_data['data'], max_failed_login_count=self.max_failed_login_count)
