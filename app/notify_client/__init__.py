@@ -1,7 +1,9 @@
+import json
 from flask_login import current_user
 from flask import has_request_context, request, abort
 from notifications_python_client.base import BaseAPIClient
 from notifications_python_client import __version__
+from notifications_utils.clients.redis.redis_client import RedisClient
 
 
 def _attach_current_user(data):
@@ -11,12 +13,61 @@ def _attach_current_user(data):
     )
 
 
+class Redis():
+
+    @staticmethod
+    def make_key(prefix, args, key_from_args):
+
+        if key_from_args is None:
+            key_from_args = [0]
+
+        return '-'.join(
+            [prefix] + [args[index] for index in key_from_args]
+        )
+
+    @staticmethod
+    def cache(prefix, key_from_args=None, ttl=(24 * 60 * 60)):
+
+        def _cache(fn):
+
+            def new_function(self, *args, **kwargs):
+                redis_key = Redis.make_key(prefix, args, key_from_args)
+                cached = self.redis_client.get(redis_key)
+                if cached:
+                    return json.loads(cached.decode('utf-8'))
+                api_resp = fn(self, *args, **kwargs)
+                self.redis_client.set(redis_key, json.dumps(api_resp))
+                return api_resp
+
+            return new_function
+        return _cache
+
+    @staticmethod
+    def expire(prefix, key_from_args=None):
+
+        def _expire(fn):
+
+            def new_function(self, *args, **kwargs):
+                redis_key = Redis.make_key(prefix, args, key_from_args)
+                self.redis_client.expire(redis_key, 0)
+                return fn(self, *args, **kwargs)
+
+            return new_function
+
+        return _expire
+
+
 class NotifyAdminAPIClient(BaseAPIClient):
+
+    redis_client = RedisClient()
+
     def init_app(self, app):
         self.base_url = app.config['API_HOST_NAME']
         self.service_id = app.config['ADMIN_CLIENT_USER_NAME']
         self.api_key = app.config['ADMIN_CLIENT_SECRET']
         self.route_secret = app.config['ROUTE_SECRET_KEY_1']
+        self.redis_client.init_app(app)
+        self.redis_client.redis_store.decode_responses = True
 
     def generate_headers(self, api_token):
         headers = {

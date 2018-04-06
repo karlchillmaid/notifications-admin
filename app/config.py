@@ -74,6 +74,9 @@ class Config(object):
     ROUTE_SECRET_KEY_2 = os.environ.get('ROUTE_SECRET_KEY_2', '')
     CHECK_PROXY_HEADER = False
 
+    REDIS_ENABLED = 1
+    REDIS_URL = 'http://localhost:6379'
+
 
 class Development(Config):
     NOTIFY_LOG_PATH = 'application.log'

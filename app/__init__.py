@@ -103,7 +103,6 @@ def create_app(application):
     logging.init_app(application, statsd_client)
     csrf.init_app(application)
     request_helper.init_app(application)
-
     service_api_client.init_app(application)
     user_api_client.init_app(application)
     api_key_api_client.init_app(application)
