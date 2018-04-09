@@ -94,7 +94,6 @@ class Development(Config):
     SECRET_KEY = 'dev-notify-secret-key'
     DESKPRO_API_HOST = "some-host"
     DESKPRO_API_KEY = "some-key"
-    REDIS_ENABLED = False
 
 
 class Test(Development):
