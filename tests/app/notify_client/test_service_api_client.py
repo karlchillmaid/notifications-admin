@@ -149,10 +149,10 @@ def test_client_returns_count_of_service_templates(
             [
                 call('service-{}'.format(SERVICE_ONE_ID))
             ],
-            b'{"foo": "bar"}',
+            b'{"data_from": "cache"}',
             [],
             [],
-            {'foo': 'bar'},
+            {'data_from': 'cache'},
         ),
         (
             [
@@ -219,7 +219,7 @@ def test_returns_value_from_cache(
     (service_api_client, 'update_sms_sender', [''] * 2, {}),
     (service_api_client, 'update_service_callback_api', [''] * 4, {}),
     (service_api_client, 'create_service_callback_api', [''] * 3, {}),
-    (user_api_client, 'add_user_to_service', [fake_uuid(), []], {}),
+    (user_api_client, 'add_user_to_service', [fake_uuid(), []], {})
 ])
 def test_expires_service_cache(
     app_,
