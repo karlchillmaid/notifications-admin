@@ -94,6 +94,7 @@ class Development(Config):
     SECRET_KEY = 'dev-notify-secret-key'
     DESKPRO_API_HOST = "some-host"
     DESKPRO_API_KEY = "some-key"
+    REDIS_ENABLED = False
 
 
 class Test(Development):
@@ -107,6 +108,7 @@ class Test(Development):
     NOTIFY_ENVIRONMENT = 'test'
     API_HOST_NAME = 'http://you-forgot-to-mock-an-api-call-to'
     TEMPLATE_PREVIEW_API_HOST = 'http://localhost:9999'
+    REDIS_ENABLED = False
 
 
 class Preview(Config):

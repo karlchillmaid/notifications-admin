@@ -1,4 +1,5 @@
 import json
+from datetime import timedelta
 from flask_login import current_user
 from flask import has_request_context, request, abort
 from notifications_python_client.base import BaseAPIClient
@@ -11,6 +12,9 @@ def _attach_current_user(data):
         created_by=current_user.id,
         **data
     )
+
+
+TTL = timedelta(hours=24).total_seconds()
 
 
 class Redis():
@@ -26,20 +30,24 @@ class Redis():
         )
 
     @staticmethod
-    def cache(prefix, key_from_args=None, ttl=(24 * 60 * 60)):
+    def cache(prefix, key_from_args=None):
 
         def _cache(fn):
 
-            def new_function(self, *args, **kwargs):
+            def new_client_method(api_client, *args, **kwargs):
                 redis_key = Redis.make_key(prefix, args, key_from_args)
-                cached = self.redis_client.get(redis_key)
+                cached = api_client.redis_client.get(redis_key)
                 if cached:
                     return json.loads(cached.decode('utf-8'))
-                api_resp = fn(self, *args, **kwargs)
-                self.redis_client.set(redis_key, json.dumps(api_resp))
+                api_resp = fn(api_client, *args, **kwargs)
+                api_client.redis_client.set(
+                    redis_key,
+                    json.dumps(api_resp),
+                    ex=TTL
+                )
                 return api_resp
 
-            return new_function
+            return new_client_method
         return _cache
 
     @staticmethod
@@ -47,12 +55,12 @@ class Redis():
 
         def _expire(fn):
 
-            def new_function(self, *args, **kwargs):
+            def new_client_method(api_client, *args, **kwargs):
                 redis_key = Redis.make_key(prefix, args, key_from_args)
-                self.redis_client.expire(redis_key, 0)
-                return fn(self, *args, **kwargs)
+                api_client.redis_client.expire(redis_key, 0)
+                return fn(api_client, *args, **kwargs)
 
-            return new_function
+            return new_client_method
 
         return _expire
 

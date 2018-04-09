@@ -110,7 +110,7 @@ class ServiceAPIClient(NotifyAdminAPIClient):
         endpoint = "/service/{0}".format(service_id)
         return self.post(endpoint, data)
 
-    @Redis.expire('service')
+    # This method is not cached because it calls through to one which is
     def update_service_with_properties(self, service_id, properties):
         return self.update_service(service_id, **properties)
 

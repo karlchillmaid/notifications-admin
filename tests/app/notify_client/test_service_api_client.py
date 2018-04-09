@@ -1,7 +1,8 @@
 import pytest
 from tests.conftest import SERVICE_ONE_ID, fake_uuid
+from unittest.mock import call
 
-from app import service_api_client
+from app import service_api_client, user_api_client
 from app.notify_client.service_api_client import ServiceAPIClient
 
 
@@ -52,7 +53,7 @@ def test_client_creates_service_with_correct_data(
     fake_uuid,
 ):
     client = ServiceAPIClient()
-    mock_post = mocker.patch.object(client, 'post')
+    mock_post = mocker.patch.object(client, 'post', return_value={'data': {'id': None}})
     mocker.patch('app.notify_client.current_user', id='123')
 
     client.create_service(
@@ -133,3 +134,109 @@ def test_client_returns_count_of_service_templates(
     assert service_api_client.count_service_templates(
         SERVICE_ONE_ID, **extra_args
     ) == expected_count
+
+
+@pytest.mark.parametrize(
+    (
+        'expected_cache_get_calls,'
+        'cache_value,'
+        'expected_api_calls,'
+        'expected_cache_set_calls,'
+        'expected_return_value,'
+    ),
+    [
+        (
+            [
+                call('service-{}'.format(SERVICE_ONE_ID))
+            ],
+            b'{"foo": "bar"}',
+            [],
+            [],
+            {'foo': 'bar'},
+        ),
+        (
+            [
+                call('service-{}'.format(SERVICE_ONE_ID))
+            ],
+            None,
+            [
+                call('/service/{}'.format(SERVICE_ONE_ID), params={})
+            ],
+            [
+                call(
+                    'service-{}'.format(SERVICE_ONE_ID),
+                    '{"data_from": "api"}',
+                    ex=86400
+                )
+            ],
+            {'data_from': 'api'},
+        ),
+    ]
+)
+def test_returns_value_from_cache(
+    mocker,
+    expected_cache_get_calls,
+    cache_value,
+    expected_return_value,
+    expected_api_calls,
+    expected_cache_set_calls,
+):
+
+    mock_redis_get = mocker.patch(
+        'app.notify_client.RedisClient.get',
+        return_value=cache_value,
+    )
+    mock_redis_set = mocker.patch(
+        'app.notify_client.RedisClient.set',
+    )
+    mock_api_get = mocker.patch(
+        'app.notify_client.NotifyAdminAPIClient.get',
+        return_value={'data_from': 'api'},
+    )
+
+    assert service_api_client.get_service(SERVICE_ONE_ID) == expected_return_value
+
+    assert mock_redis_get.call_args_list == expected_cache_get_calls
+    assert mock_redis_set.call_args_list == expected_cache_set_calls
+    assert mock_api_get.call_args_list == expected_api_calls
+
+
+@pytest.mark.parametrize('client, method, extra_args, extra_kwargs', [
+    (service_api_client, 'update_service', [], {'name': 'foo'}),
+    (service_api_client, 'update_service_with_properties', [], {'properties': {}}),
+    (service_api_client, 'archive_service', [], {}),
+    (service_api_client, 'suspend_service', [], {}),
+    (service_api_client, 'resume_service', [], {}),
+    (service_api_client, 'remove_user_from_service', [''], {}),
+    (service_api_client, 'update_whitelist', [{}], {}),
+    (service_api_client, 'create_service_inbound_api', [''] * 3, {}),
+    (service_api_client, 'update_service_inbound_api', [''] * 4, {}),
+    (service_api_client, 'add_reply_to_email_address', [''], {}),
+    (service_api_client, 'update_reply_to_email_address', [''] * 2, {}),
+    (service_api_client, 'add_letter_contact', [''], {}),
+    (service_api_client, 'update_letter_contact', [''] * 2, {}),
+    (service_api_client, 'add_sms_sender', [''], {}),
+    (service_api_client, 'update_sms_sender', [''] * 2, {}),
+    (service_api_client, 'update_service_callback_api', [''] * 4, {}),
+    (service_api_client, 'create_service_callback_api', [''] * 3, {}),
+    (user_api_client, 'add_user_to_service', [fake_uuid(), []], {}),
+])
+def test_expires_service_cache(
+    app_,
+    mock_get_user,
+    mocker,
+    client,
+    method,
+    extra_args,
+    extra_kwargs,
+):
+    mocker.patch('app.notify_client.current_user', id='1')
+    mock_redis_expire = mocker.patch('app.notify_client.RedisClient.expire')
+    mock_request = mocker.patch('notifications_python_client.base.BaseAPIClient.request')
+
+    getattr(client, method)(SERVICE_ONE_ID, *extra_args, **extra_kwargs)
+
+    assert mock_redis_expire.call_args_list == [
+        call('service-{}'.format(SERVICE_ONE_ID), 0)
+    ]
+    assert len(mock_request.call_args_list) == 1
