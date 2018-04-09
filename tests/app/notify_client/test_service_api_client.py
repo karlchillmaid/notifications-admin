@@ -2,7 +2,7 @@ import pytest
 from tests.conftest import SERVICE_ONE_ID, fake_uuid
 from unittest.mock import call
 
-from app import service_api_client, user_api_client, organisations_client
+from app import service_api_client, user_api_client
 from app.notify_client.service_api_client import ServiceAPIClient
 
 
@@ -202,25 +202,25 @@ def test_returns_value_from_cache(
 
 
 @pytest.mark.parametrize('client, method, extra_args, extra_kwargs', [
-    (service_api_client, 'update_service', [], {'name': 'foo'}),
-    (service_api_client, 'update_service_with_properties', [], {'properties': {}}),
-    (service_api_client, 'archive_service', [], {}),
-    (service_api_client, 'suspend_service', [], {}),
-    (service_api_client, 'resume_service', [], {}),
-    (service_api_client, 'remove_user_from_service', [''], {}),
-    (service_api_client, 'update_whitelist', [{}], {}),
-    (service_api_client, 'create_service_inbound_api', [''] * 3, {}),
-    (service_api_client, 'update_service_inbound_api', [''] * 4, {}),
-    (service_api_client, 'add_reply_to_email_address', [''], {}),
-    (service_api_client, 'update_reply_to_email_address', [''] * 2, {}),
-    (service_api_client, 'add_letter_contact', [''], {}),
-    (service_api_client, 'update_letter_contact', [''] * 2, {}),
-    (service_api_client, 'add_sms_sender', [''], {}),
-    (service_api_client, 'update_sms_sender', [''] * 2, {}),
-    (service_api_client, 'update_service_callback_api', [''] * 4, {}),
-    (service_api_client, 'create_service_callback_api', [''] * 3, {}),
-    (user_api_client, 'add_user_to_service', [fake_uuid(), []], {}),
-    (organisations_client, 'add_user_to_organisation', [fake_uuid(), []], {}),
+    (service_api_client, 'update_service', [SERVICE_ONE_ID], {'name': 'foo'}),
+    (service_api_client, 'update_service_with_properties', [SERVICE_ONE_ID], {'properties': {}}),
+    (service_api_client, 'archive_service', [SERVICE_ONE_ID], {}),
+    (service_api_client, 'suspend_service', [SERVICE_ONE_ID], {}),
+    (service_api_client, 'resume_service', [SERVICE_ONE_ID], {}),
+    (service_api_client, 'remove_user_from_service', [SERVICE_ONE_ID, ''], {}),
+    (service_api_client, 'update_whitelist', [SERVICE_ONE_ID, {}], {}),
+    (service_api_client, 'create_service_inbound_api', [SERVICE_ONE_ID] + [''] * 3, {}),
+    (service_api_client, 'update_service_inbound_api', [SERVICE_ONE_ID] + [''] * 4, {}),
+    (service_api_client, 'add_reply_to_email_address', [SERVICE_ONE_ID, ''], {}),
+    (service_api_client, 'update_reply_to_email_address', [SERVICE_ONE_ID] + [''] * 2, {}),
+    (service_api_client, 'add_letter_contact', [SERVICE_ONE_ID, ''], {}),
+    (service_api_client, 'update_letter_contact', [SERVICE_ONE_ID] + [''] * 2, {}),
+    (service_api_client, 'add_sms_sender', [SERVICE_ONE_ID, ''], {}),
+    (service_api_client, 'update_sms_sender', [SERVICE_ONE_ID] + [''] * 2, {}),
+    (service_api_client, 'update_service_callback_api', [SERVICE_ONE_ID] + [''] * 4, {}),
+    (service_api_client, 'create_service_callback_api', [SERVICE_ONE_ID] + [''] * 3, {}),
+    (user_api_client, 'add_user_to_service', [SERVICE_ONE_ID, fake_uuid(), []], {}),
+    (user_api_client, 'add_user_to_organisation', [fake_uuid(), SERVICE_ONE_ID], {}),
 ])
 def test_expires_service_cache(
     app_,
@@ -235,7 +235,7 @@ def test_expires_service_cache(
     mock_redis_expire = mocker.patch('app.notify_client.RedisClient.expire')
     mock_request = mocker.patch('notifications_python_client.base.BaseAPIClient.request')
 
-    getattr(client, method)(SERVICE_ONE_ID, *extra_args, **extra_kwargs)
+    getattr(client, method)(*extra_args, **extra_kwargs)
 
     assert mock_redis_expire.call_args_list == [
         call('service-{}'.format(SERVICE_ONE_ID), 0)

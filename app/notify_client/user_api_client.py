@@ -154,9 +154,16 @@ class UserApiClient(NotifyAdminAPIClient):
         data = [{'permission': x} for x in translate_permissions_from_admin_roles_to_db(permissions)]
         self.post(endpoint, data=data)
 
-    def add_user_to_organisation(self, org_id, user_id):
+    @cache.expire('service', key_from_args=[1])
+    def _raw_add_user_to_organisation(self, org_id, user_id):
         resp = self.post('/organisations/{}/users/{}'.format(org_id, user_id), data={})
-        return User(resp['data'], max_failed_login_count=self.max_failed_login_count)
+        return resp['data']
+
+    def add_user_to_organisation(self, org_id, user_id):
+        return User(
+            self._raw_add_user_to_organisation(org_id, user_id),
+            max_failed_login_count=self.max_failed_login_count
+        )
 
     def set_user_permissions(self, user_id, service_id, permissions):
         # permissions passed in are the combined admin roles, not db permissions

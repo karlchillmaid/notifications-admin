@@ -1,5 +1,3 @@
-import json
-from datetime import timedelta
 from flask_login import current_user
 from flask import has_request_context, request, abort
 from notifications_python_client.base import BaseAPIClient
