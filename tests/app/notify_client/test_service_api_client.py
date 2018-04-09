@@ -2,7 +2,7 @@ import pytest
 from tests.conftest import SERVICE_ONE_ID, fake_uuid
 from unittest.mock import call
 
-from app import service_api_client, user_api_client
+from app import service_api_client, user_api_client, organisations_client
 from app.notify_client.service_api_client import ServiceAPIClient
 
 
@@ -219,7 +219,8 @@ def test_returns_value_from_cache(
     (service_api_client, 'update_sms_sender', [''] * 2, {}),
     (service_api_client, 'update_service_callback_api', [''] * 4, {}),
     (service_api_client, 'create_service_callback_api', [''] * 3, {}),
-    (user_api_client, 'add_user_to_service', [fake_uuid(), []], {})
+    (user_api_client, 'add_user_to_service', [fake_uuid(), []], {}),
+    (organisations_client, 'add_user_to_organisation', [fake_uuid(), []], {}),
 ])
 def test_expires_service_cache(
     app_,

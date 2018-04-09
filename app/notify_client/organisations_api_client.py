@@ -1,4 +1,4 @@
-from app.notify_client import NotifyAdminAPIClient, _attach_current_user, Redis
+from app.notify_client import NotifyAdminAPIClient, _attach_current_user, cache
 
 
 class OrganisationsClient(NotifyAdminAPIClient):
@@ -27,7 +27,7 @@ class OrganisationsClient(NotifyAdminAPIClient):
     def get_service_organisation(self, service_id):
         return self.get(url="/service/{}/organisation".format(service_id))
 
-    @Redis.expire('service')
+    @cache.expire('service')
     def update_service_organisation(self, service_id, org_id):
         data = {
             'service_id': service_id
