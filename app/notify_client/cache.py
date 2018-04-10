@@ -1,5 +1,6 @@
 import json
 from datetime import timedelta
+from functools import wraps
 
 TTL = timedelta(hours=24).total_seconds()
 
@@ -18,6 +19,7 @@ def set(prefix, key_from_args=None):
 
     def _set(client_method):
 
+        @wraps(client_method)
         def new_client_method(client_instance, *args, **kwargs):
             redis_key = _make_key(prefix, args, key_from_args)
             cached = client_instance.redis_client.get(redis_key)
@@ -39,6 +41,7 @@ def expire(prefix, key_from_args=None):
 
     def _expire(client_method):
 
+        @wraps(client_method)
         def new_client_method(client_instance, *args, **kwargs):
             redis_key = _make_key(prefix, args, key_from_args)
             client_instance.redis_client.expire(redis_key, 0)
