@@ -1,6 +1,7 @@
+from unittest.mock import call
+
 import pytest
 from tests.conftest import SERVICE_ONE_ID, fake_uuid
-from unittest.mock import call
 
 from app import service_api_client, user_api_client
 from app.notify_client.service_api_client import ServiceAPIClient
