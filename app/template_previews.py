@@ -1,36 +1,49 @@
 import requests
 from flask import current_app, json
+from notifications_utils.template import LetterPreviewTemplate
 
 from app import current_service
 
 
 class TemplatePreview:
     @classmethod
-    def from_database_object(cls, template, filetype, values=None, page=None):
-        data = {
-            'letter_contact_block': template.get('reply_to_text', ''),
-            'template': template,
-            'values': values,
-            'dvla_org_id': current_service['dvla_organisation'],
-        }
+    def from_database_object(
+        cls,
+        template,
+        filetype,
+        values=None,
+        date=None,
+        page=None,
+    ):
+        letter_preview_template = LetterPreviewTemplate(
+            template,
+            values,
+            letter_contact_block=template.get('reply_to_text', ''),
+            admin_base_url='http://localhost:6013',
+            logo_file_name=logos.get(
+                current_service['dvla_organisation']
+            ).raster,
+            date=date,
+        )
         resp = requests.post(
-            '{}/preview.{}{}'.format(
+            '{}/preview.html.{}{}'.format(
                 current_app.config['TEMPLATE_PREVIEW_API_HOST'],
                 filetype,
                 '?page={}'.format(page) if page else '',
             ),
-            json=data,
+            json={"html": str(letter_preview_template)},
             headers={'Authorization': 'Token {}'.format(current_app.config['TEMPLATE_PREVIEW_API_KEY'])}
         )
         return (resp.content, resp.status_code, resp.headers.items())
 
     @classmethod
-    def from_utils_template(cls, template, filetype, page=None):
+    def from_utils_template(cls, template, filetype, page=None, date=None):
         return cls.from_database_object(
             template._template,
             filetype,
             template.values,
             page=page,
+            date=date,
         )
 
 
