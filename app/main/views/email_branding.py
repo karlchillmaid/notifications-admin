@@ -15,7 +15,7 @@ from app.main.s3_client import (
     persist_logo,
     upload_logo,
 )
-from app.main.views.service_settings import (
+from app.main.views.service_settings.platform_admin import (
     get_branding_as_dict,
     get_branding_as_value_and_label,
 )

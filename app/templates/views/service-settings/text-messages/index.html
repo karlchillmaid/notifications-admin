@@ -1,0 +1,89 @@
+{% extends "withnav_template.html" %}
+{% from "components/banner.html" import banner_wrapper %}
+{% from "components/table.html" import mapping_table, row, text_field, optional_text_field, edit_field, field, boolean_field with context %}
+
+{% block service_page_title %}
+  Settings
+{% endblock %}
+
+{% block maincolumn_content %}
+  <h1 class="heading-large">Text message settings</h1>
+  <div class="bottom-gutter-3-2 dashboard-table body-copy-table">
+
+    {% call mapping_table(
+      caption='Text messages',
+      field_headings=['Label', 'Value', 'Action'],
+      field_headings_visible=False,
+      caption_visible=False
+    ) %}
+
+      {% call row() %}
+        {{ text_field('Send text messages') }}
+        {{ boolean_field('sms' in current_service.permissions) }}
+        {{ edit_field(
+            'Change',
+            url_for('.service_set_sms',
+            service_id=current_service.id),
+            permissions=['manage_service']
+          )
+        }}
+      {% endcall %}
+
+      {% if 'sms' in current_service.permissions %}
+        {% call row() %}
+          {{ text_field('Text message sender') }}
+          {% call field(status='default' if default_sms_sender == "None" else '') %}
+            {{ default_sms_sender | string | nl2br | safe if default_sms_sender else 'None'}}
+            {% if sms_sender_count > 1 %}
+              <div class="hint">
+                {{ '…and %d more' | format(sms_sender_count - 1) }}
+              </div>
+            {% endif %}
+          {% endcall %}
+          {{ edit_field(
+              'Manage' if sms_sender_count else 'Change',
+              url_for('.service_sms_senders',
+              service_id=current_service.id),
+              permissions=['manage_service','manage_api_keys']
+          )
+          }}
+        {% endcall %}
+
+        {% call row() %}
+          {{ text_field('Text messages start with service name') }}
+          {{ boolean_field(prefix_sms) }}
+          {{ edit_field(
+              'Change',
+              url_for('.service_set_sms_prefix',
+              service_id=current_service.id),
+              permissions=['manage_service']
+          )
+          }}
+        {% endcall %}
+
+        {% call row() %}
+          {{ text_field('International text messages') }}
+          {{ boolean_field('international_sms' in current_service.permissions) }}
+          {{ edit_field(
+              'Change',
+              url_for('.service_set_international_sms',
+              service_id=current_service.id),
+              permissions=['manage_service']
+          )
+          }}
+        {% endcall %}
+
+        {% call row() %}
+          {{ text_field('Receive text messages') }}
+          {{ boolean_field('inbound_sms' in current_service.permissions) }}
+          {{ edit_field(
+              'Change',
+              url_for('.service_set_inbound_sms',
+              service_id=current_service.id),
+              permissions=['manage_service']
+          )
+          }}
+        {% endcall %}
+      {% endif %}
+    {% endcall %}
+{% endblock %}

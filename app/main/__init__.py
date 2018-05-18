@@ -35,3 +35,11 @@ from app.main.views import (  # noqa
     inbound_number,
     agreement,
 )
+
+from app.main.views.service_settings import (
+    index,
+    email,
+    letter,
+    platform_admin,
+    text_messages
+)

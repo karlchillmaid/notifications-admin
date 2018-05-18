@@ -1,0 +1,55 @@
+{% extends "withnav_template.html" %}
+{% from "components/banner.html" import banner_wrapper %}
+{% from "components/table.html" import mapping_table, row, text_field, optional_text_field, edit_field, field, boolean_field with context %}
+
+{% block service_page_title %}
+  Letters Settings
+{% endblock %}
+
+{% block maincolumn_content %}
+  <h1 class="heading-large">Letter Settings</h1>
+  <div class="bottom-gutter-3-2 dashboard-table body-copy-table">
+
+    {% call mapping_table(
+      caption='Letters',
+      field_headings=['Label', 'Value', 'Action'],
+      field_headings_visible=False,
+      caption_visible=False
+    ) %}
+
+      {% call row() %}
+        {{ text_field('Send letters') }}
+        {{ boolean_field('letter' in current_service.permissions) }}
+        {{ edit_field(
+            'Change',
+            url_for('.service_set_letters',
+            service_id=current_service.id),
+            permissions=['manage_service']
+        )
+        }}
+      {% endcall %}
+
+      {% if 'letter' in current_service.permissions %}
+        {% call row() %}
+          {{ text_field('Sender addresses') }}
+          {% call field(status='default' if default_letter_contact_block == "Not set" else '') %}
+            {{ default_letter_contact_block | string | nl2br | safe if default_letter_contact_block else 'Not set'}}
+            {% if letter_contact_details_count > 1 %}
+              <div class="hint">
+                {{ '…and %d more' | format(letter_contact_details_count - 1) }}
+              </div>
+            {% endif %}
+          {% endcall %}
+          {{ edit_field(
+              'Manage' if letter_contact_details_count else 'Change',
+              url_for('.service_letter_contact_details',
+              service_id=current_service.id),
+              permissions=['manage_service','manage_api_keys']
+          )
+          }}
+        {% endcall %}
+      {% endif %}
+
+    {% endcall %}
+  </div>
+{% endblock %}
