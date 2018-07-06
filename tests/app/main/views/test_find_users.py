@@ -21,3 +21,4 @@ def test_find_users_by_email_page_loads_correctly(
     document = html.fromstring(response.get_data(as_text=True))
     header = document.xpath('//h1')[0].text
     assert "Find users by e-mail" in header
+    assert len(document.xpath("//input[@type='search']")) > 0
