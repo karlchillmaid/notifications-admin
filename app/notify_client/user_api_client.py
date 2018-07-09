@@ -179,6 +179,11 @@ class UserApiClient(NotifyAdminAPIClient):
         data = {'email': email_address}
         self.post(endpoint, data=data)
 
+    def find_users_by_full_or_partial_email(self, email_address):
+        endpoint = '/find-users-by-email'
+        data = {'email': email_address}
+        self.post(endpoint, data=data)
+
     def is_email_already_in_use(self, email_address):
         if self.get_user_by_email_or_none(email_address):
             return True
