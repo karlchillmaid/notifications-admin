@@ -49,5 +49,7 @@
     {% endfor %}
     </ul>
   </nav>
+  {% elif users_found == [] %}
+    <p>No users found.</p>
   {% endif %}
 {% endblock %}
