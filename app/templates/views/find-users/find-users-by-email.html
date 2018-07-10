@@ -38,8 +38,15 @@
   </form>
 
   {% if users_found %}
+  <nav class="browse-list">
+    <ul>
     {% for user in users_found %}
-      <p> {{ user.name }} </p>
+      <li class="browse-list-item">
+      <a href="#" class="browse-list-link">{{ user.email_address }}</a>
+      <p class="browse-list-sub-item"> {{ user.name }} </p>
+    </li>
     {% endfor %}
+    </ul>
+  </nav>
   {% endif %}
 {% endblock %}
