@@ -14,7 +14,7 @@ def find_users_by_email():
     form = SearchUsersForm()
     users_found = None
     if form.validate_on_submit():
-        users_found = user_api_client.find_users_by_full_or_partial_email(form.search.data)['users']
+        users_found = user_api_client.find_users_by_full_or_partial_email(form.search.data)['data']
     return render_template(
         'views/find-users/find-users-by-email.html',
         form=form,
