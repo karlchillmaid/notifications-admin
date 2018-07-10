@@ -23,3 +23,14 @@ def find_users_by_email():
         form=form,
         users_found=users_found
     ), status
+
+
+@main.route("/users/<user_id>", methods=['GET'])
+@login_required
+@user_is_platform_admin
+def user_information(user_id):
+    user = user_api_client.get_user(user_id)
+    return render_template(
+        'views/find-users/user-information.html',
+        user=user
+    )
