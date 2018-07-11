@@ -93,7 +93,10 @@ def test_user_information_page_shows_information_about_user(
 ):
     mocker.patch('app.user_api_client.get_user', side_effect=[
         platform_admin_user,
-        User(user_json(name="Apple Bloom"))
+        User(user_json(name="Apple Bloom", services=[
+            {"id": 1, "name": "Fresh Orchard Juice"},
+            {"id": 2, "name": "Nature Therapy"},
+        ]))
     ], autospec=True)
     client.login(platform_admin_user)
     response = client.get(url_for('main.user_information', user_id=345))
@@ -102,3 +105,7 @@ def test_user_information_page_shows_information_about_user(
     document = html.fromstring(response.get_data(as_text=True))
     header = document.xpath('//h1')[0].text
     assert "Apple Bloom" in header
+    assert "test@gov.uk" in document.text_content()
+    assert "+447700900986" in document.text_content()
+    assert "Services" in document.xpath('//h2')[0].text
+    assert "Last login" in document.xpath('//h2')[1].text

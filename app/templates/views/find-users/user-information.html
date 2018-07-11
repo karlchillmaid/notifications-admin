@@ -10,10 +10,18 @@
 {% endblock %}
 
 {% block platform_admin_content %}
+  <div class="grid-row bottom-gutter">
+    <div class="column-two-thirds">
+      <h1 class="heading-large">
+        {{ user.name }}
+      </h1>
+      <p>{{ user.email_address }}</p>
+      <p>{{ user.mobile_number }}</p>
+      <h2 class="heading-medium">Services</h2>
+      <h2 class="heading-medium">Last login</h2>
+    </div>
+  </div>
 
-  <h1 class="heading-large">
-    {{ user.name }}
-  </h1>
 
 
 {% endblock %}
