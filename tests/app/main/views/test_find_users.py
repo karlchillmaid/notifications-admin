@@ -18,8 +18,7 @@ def test_find_users_by_email_page_loads_correctly(
     assert response.status_code == 200
 
     document = html.fromstring(response.get_data(as_text=True))
-    header = document.xpath('//h1')[0].text
-    assert "Find users by e-mail" in header
+    assert document.xpath("//h1/text()[normalize-space()='Find users by e-mail']")
     assert len(document.xpath("//input[@type='search']")) > 0
 
 
@@ -35,7 +34,8 @@ def test_find_users_by_email_displays_users_found(
     assert response.status_code == 200
 
     document = html.fromstring(response.get_data(as_text=True))
-    assert "Test User" in document.text_content()
+    assert document.xpath("//a/text()[normalize-space()='test@gov.uk']")
+    assert document.xpath("//p/text()[normalize-space()='Test User']")
 
 
 def test_find_users_by_email_displays_multiple_users(
@@ -53,8 +53,9 @@ def test_find_users_by_email_displays_multiple_users(
     assert response.status_code == 200
 
     document = html.fromstring(response.get_data(as_text=True))
-    assert "Apple Jack" in document.text_content()
-    assert "Apple Bloom" in document.text_content()
+
+    assert document.xpath("//p/text()[normalize-space()='Apple Jack']")
+    assert document.xpath("//p/text()[normalize-space()='Apple Bloom']")
 
 
 def test_find_users_by_email_displays_message_if_no_users_found(
@@ -69,7 +70,7 @@ def test_find_users_by_email_displays_message_if_no_users_found(
     assert response.status_code == 200
 
     document = html.fromstring(response.get_data(as_text=True))
-    assert "No users found." in document.text_content()
+    assert document.xpath("//p/text()[normalize-space()='No users found.']")
 
 
 def test_find_users_by_email_validates_against_empty_search_submission(
@@ -83,7 +84,10 @@ def test_find_users_by_email_validates_against_empty_search_submission(
     assert response.status_code == 400
 
     document = html.fromstring(response.get_data(as_text=True))
-    assert "You need to enter full or partial e-mail address to search by." in document.text_content()
+    expected_message = "You need to enter full or partial e-mail address to search by."
+    assert document.xpath(
+        "//span[contains(@class, 'error-message') and normalize-space(text()) = '{}']".format(expected_message)
+    )
 
 
 def test_user_information_page_shows_information_about_user(
@@ -103,9 +107,9 @@ def test_user_information_page_shows_information_about_user(
     assert response.status_code == 200
 
     document = html.fromstring(response.get_data(as_text=True))
-    header = document.xpath('//h1')[0].text
-    assert "Apple Bloom" in header
-    assert "test@gov.uk" in document.text_content()
-    assert "+447700900986" in document.text_content()
-    assert "Services" in document.xpath('//h2')[0].text
-    assert "Last login" in document.xpath('//h2')[1].text
+
+    assert document.xpath("//h1/text()[normalize-space()='Apple Bloom']")
+    assert document.xpath("//p/text()[normalize-space()='test@gov.uk']")
+    assert document.xpath("//p/text()[normalize-space()='+447700900986']")
+    assert document.xpath("//h2/text()[normalize-space()='Services']")
+    assert document.xpath("//h2/text()[normalize-space()='Last login']")
