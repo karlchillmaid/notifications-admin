@@ -111,5 +111,9 @@ def test_user_information_page_shows_information_about_user(
     assert document.xpath("//h1/text()[normalize-space()='Apple Bloom']")
     assert document.xpath("//p/text()[normalize-space()='test@gov.uk']")
     assert document.xpath("//p/text()[normalize-space()='+447700900986']")
+
     assert document.xpath("//h2/text()[normalize-space()='Services']")
+    assert document.xpath("//p/text()[normalize-space()='Fresh Orchard Juice']")
+    assert document.xpath("//p/text()[normalize-space()='Nature Therapy']")
+
     assert document.xpath("//h2/text()[normalize-space()='Last login']")
