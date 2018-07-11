@@ -117,3 +117,4 @@ def test_user_information_page_shows_information_about_user(
     assert document.xpath("//p/text()[normalize-space()='Nature Therapy']")
 
     assert document.xpath("//h2/text()[normalize-space()='Last login']")
+    assert document.xpath("//p/text()[normalize-space()='0 failed login attempts']")

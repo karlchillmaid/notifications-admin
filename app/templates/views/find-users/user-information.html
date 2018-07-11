@@ -18,19 +18,28 @@
       <p>{{ user.email_address }}</p>
       <p>{{ user.mobile_number }}</p>
       <h2 class="heading-medium">Services</h2>
-        <nav class="browse-list">
-          <ul>
-          {% for service in user.services %}
-            <li class="browse-list-item">
-              <p class="browse-list-sub-item">{{ service.name }}</p>
-            </li>
-          {% endfor %}
-          </ul>
-        </nav>
+      <nav class="browse-list">
+        <ul>
+        {% for service in user.services %}
+          <li class="browse-list-item">
+            <p class="browse-list-sub-item">{{ service.name }}</p>
+          </li>
+        {% endfor %}
+        </ul>
+      </nav>
       <h2 class="heading-medium">Last login</h2>
+      {% if not user.logged_in_at %}
+      <p>This person has never logged in</p>
+      {% else %}
+      <p>Last logged in
+        <time class="timeago" datetime="{{ user.logged_in_at }}">
+          {{ user.logged_in_at|format_delta }}
+        </time>
+      </p>
+      {% endif %}
+      <p{% if user.failed_login_count > 0 %} style="color:red;"{% endif %}>
+        {{ user.failed_login_count }} failed login attempts
+      </p>
     </div>
   </div>
-
-
-
 {% endblock %}
